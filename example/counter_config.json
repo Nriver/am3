@@ -1,0 +1,18 @@
+{
+    "start": "counter.py",
+    "interpreter": "python3",
+    "restart_control": true,
+    "restart_check_delay": 0,
+    "restart_keyword": [
+        "Exception XXX",
+        "Exception YYY"
+    ],
+    "restart_keyword_regex": [
+        "\\| 0.00 \\|",
+        "2\\d\\.\\d\\d KB/s"
+    ],
+    "working_directory": "/home/nate/gitRepo/am3/example/",
+    "restart_wait_time": 3,
+    "before_execute": "/home/nate/gitRepo/am3/example/counter_before_execute.py",
+    "name": "counter"
+}
