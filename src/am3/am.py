@@ -6,8 +6,7 @@ import subprocess
 import sys
 
 from am3 import cmdline
-from am3.alias import alias_list, alias_log, alias_startup, alias_load, alias_start, alias_stop, alias_delete, \
-    alias_restart, alias_help, alias_api
+from am3.alias import get_aliases
 from am3.settings import am3_log_path
 
 
@@ -26,16 +25,16 @@ def main():
         os.system(sys.executable + ' ' + cmdline_file)
         exit()
 
-    if len(sys.argv) == 2 and sys.argv[1] in alias_help:
+    if len(sys.argv) == 2 and sys.argv[1] in get_aliases('help'):
         os.system(sys.executable + ' ' + cmdline_file + ' -h')
         exit()
 
     action = sys.argv[1]
-    if action in alias_list:
+    if action in get_aliases('list'):
         print('应用列表')
         cmdline.list_apps()
         exit()
-    elif action in alias_log:
+    elif action in get_aliases('log'):
         print('输出日志')
         am3_status = cmdline.read_am3_status()
         apps = am3_status['apps']
@@ -56,12 +55,12 @@ def main():
             else:
                 print('app id 不存在')
         exit()
-    elif action in alias_startup:
+    elif action in get_aliases('startup'):
         print('自启动')
         cmdline.startup(am3_executable_path=os.path.abspath(__file__))
         exit()
 
-    elif action in alias_load:
+    elif action in get_aliases('load'):
         app_list = cmdline.load_apps()
         for app in app_list:
             app_id = app['app_id']
@@ -74,12 +73,12 @@ def main():
                                  )
         exit()
 
-    elif action in alias_api:
+    elif action in get_aliases('api'):
         print('api')
         cmdline.handle_api()
         exit()
 
-    if sys.argv[1] in (alias_start + alias_stop + alias_restart + alias_delete):
+    if sys.argv[1] in (get_aliases('start') + get_aliases('stop') + get_aliases('restart') + get_aliases('delete')):
         if sys.argv[2] == 'all':
             # 特殊情况 传入的参数是 all 则遍历所有的 app_id
             app_ids = cmdline.get_all_app_ids()

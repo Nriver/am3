@@ -14,7 +14,7 @@ import uuid
 from datetime import datetime
 
 import psutil
-from am3.alias import alias_start, alias_restart, alias_delete, alias_stop, alias_save, alias_load, alias_init
+from am3.alias import get_aliases, alias_dict
 from am3.settings import am3_pids_path, am3_status_path, am3_log_path, am3_logs_path, am3_dump_path, am3_dump_bak_path, \
     am3_data_path, am3_init_path
 from am3.utils.cmd_util import parse_args, guess_interpreter
@@ -656,7 +656,7 @@ def handle_api():
         exit()
 
     cmd = sys.argv[2]
-    if cmd in alias_init:
+    if cmd in get_aliases('init'):
         logger.info('api服务 初始化')
         # 交互式设置初始化参数
 
@@ -703,13 +703,13 @@ def handle_api():
                 logger.info('写入 am3 status')
                 f2.write(json.dumps(status_data, ensure_ascii=False, indent=4))
 
-    elif cmd in alias_start:
+    elif cmd in get_aliases('start'):
         logger.info('api服务 启动')
 
-    elif cmd in alias_stop:
+    elif cmd in get_aliases('stop'):
         logger.info('api服务 停止')
 
-    elif cmd in alias_restart:
+    elif cmd in get_aliases('restart'):
         logger.info('api服务 重启')
 
     logger.info('finished')
@@ -718,28 +718,27 @@ def handle_api():
 def main():
     logger.info('执行main()')
 
-    func_rel = [
-        [alias_start, start_app_by_app_id],
-        [alias_restart, restart_app_by_app_id],
-        [alias_delete, delete_app_by_app_id],
-        # [alias_list, list_apps],
-        [alias_stop, stop_app_by_app_id],
-        [alias_save, save_apps],
-        # [alias_load, load_apps],
-        # [alias_startup, startup],
-    ]
-
-    func_dict = {}
-    for keywords, func in func_rel:
-        for keyword in keywords:
-            func_dict[keyword] = func
+    func_dict = {
+        keyword: func
+        for action, func in [
+            ("start", start_app_by_app_id),
+            ("restart", restart_app_by_app_id),
+            ("delete", delete_app_by_app_id),
+            ("stop", stop_app_by_app_id),
+            ("save", save_apps),
+            # ("list", list_apps),
+            # ("load", load_apps),
+            # ("startup", startup),
+        ]
+        for keyword in alias_dict.get(action, [])
+    }
 
     if sys.argv[1] in func_dict.keys():
         # start 命令后面如果是数字 则认为是 app_id 尝试当做int 处理
         # 如果报错，就回落到默认的 --start 参数，认为后面是应用启动路径
         logger.info('特殊命令')
 
-        if sys.argv[1] in (alias_save + alias_load):
+        if sys.argv[1] in (get_aliases('save') + get_aliases('load')):
             func_dict[sys.argv[1]]()
         else:
             try:
