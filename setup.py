@@ -175,9 +175,10 @@ setup(
 
     # If there are data files included in your packages that need to be
     # installed, specify them here.
-    # package_data={  # Optional
-    #     'sample': ['package_data.dat'],
-    # },
+    include_package_data=True,
+    package_data={
+        'am3.startup_scripts': ['*.tpl'],
+    },
 
     # Although 'package_data' is the preferred approach, in some case you may
     # need to place data files outside of your packages. See:

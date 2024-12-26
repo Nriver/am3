@@ -581,7 +581,7 @@ def startup(am3_executable_path):
 
     def get_template(tpl_name):
         # 获取模板，渲染参数
-        template_file = f'{package_path}/templates/init-scripts/{tpl_name}.tpl'
+        template_file = f'{package_path}/startup_scripts/{tpl_name}.tpl'
         with open(template_file, 'r', encoding='utf-8') as f:
             template = f.read().format(**template_vars)
             return template
