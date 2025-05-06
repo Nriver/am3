@@ -1,1 +1,3 @@
-include src/am3/init_scripts/*.tpl
+include README.md
+include README_zh.md
+include src/am3/startup_scripts/*.tpl

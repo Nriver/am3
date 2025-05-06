@@ -2,6 +2,9 @@
 
 AM3 = Application Manager written with python 3
 
+English | [中文](README_zh.md)
+
+A command-line tool for managing and monitoring applications.
 
 ## 🦮 Table of Contents
 
@@ -9,30 +12,30 @@ AM3 = Application Manager written with python 3
 * [am3](#am3)
    * [🦮 Table of Contents](#-table-of-contents)
    * [🔧 Installation](#-installation)
-   * [📖 (Basic) Usage](#-basic-usage)
+   * [📖 Basic Usage](#-basic-usage)
       * [List Applications](#list-applications)
       * [Start an Application](#start-an-application)
-         * [Specify the main script or file](#specify-the-main-script-or-file)
-         * [Specify a custom interpreter](#specify-a-custom-interpreter)
-         * [Start executable files directly](#start-executable-files-directly)
       * [Stop an Application](#stop-an-application)
-   * [⚙️ Advanced Parameters](#️-advanced-parameters)
-      * [Generate Configuration](#generate-configuration)
-      * [Load Configuration](#load-configuration)
-      * [Restart Keywords](#restart-keywords)
-      * [Set Working Directory](#set-working-directory)
-      * [Set Restart Delay](#set-restart-delay)
-      * [Use Regular Expressions for Restart Keywords](#use-regular-expressions-for-restart-keywords)
-      * [Restart Check Delay](#restart-check-delay)
-      * [Pre-Execution Environment Check](#pre-execution-environment-check)
-      * [Assign Application Name](#assign-application-name)
-* [🙏 Thanks](#-thanks)
+      * [Restart an Application](#restart-an-application)
+      * [Delete an Application](#delete-an-application)
+      * [View Logs](#view-logs)
+      * [Save and Load Application List](#save-and-load-application-list)
+   * [⚙️ Advanced Features](#️-advanced-features)
+      * [Configuration Files](#configuration-files)
+      * [Auto Restart](#auto-restart)
+      * [API Service](#api-service)
+      * [Startup on Boot](#startup-on-boot)
+   * [🔄 Command Reference](#-command-reference)
+      * [Global Commands](#global-commands)
+      * [Application Management Commands](#application-management-commands)
+      * [API Service Commands](#api-service-commands)
+* [🙏 Acknowledgements](#-acknowledgements)
 <!--te-->
 
 
 ## 🔧 Installation
 
-Python3 is required, which should be available on most of the modern Linux distributions.
+Python 3 is required, which should be available on most modern Linux distributions.
 
 Install am3 with this command:
 
@@ -40,166 +43,249 @@ Install am3 with this command:
 pip install am3
 ```
 
-Then you can use it with `am` or `am3`.
+After installation, you can use either the `am` or `am3` command.
 
 ---
 
-## 📖 (Basic) Usage
+## 📖 Basic Usage
 
 ### List Applications
 
 Retrieve and display information about running applications, including their name, ID, and other details.
 
 ```bash
-am3 ls
+am list
+# or use the shorthand
+am ls
+```
+
+Display more detailed information:
+
+```bash
+am list --all
 ```
 
 ---
 
 ### Start an Application
 
-Launch an application by specifying a command and parameters:
+There are multiple ways to start an application:
+
+**1. Start a registered application by ID**
 
 ```bash
-am --start "ping" --params "127.0.0.1 -c 5"
+am start 0
 ```
 
-By default, **am3** will automatically restart the application if it exits unexpectedly. Each application is assigned a
-unique ID, which can be used to manage or interact with the application.
-
-#### Specify the main script or file
-
-Use the `-s` option to specify the main script or file. If the script is a Python file, the Python interpreter is
-automatically invoked. Similarly, shell scripts are executed using Bash. This behavior is defined in the
-`guess_interpreter` function.
+**2. Start a new application**
 
 ```bash
-am -s example/counter.py
+am start --start "ping" --params "127.0.0.1"
 ```
 
-#### Specify a custom interpreter
-
-If needed, you can explicitly define the interpreter using the `-i` option:
+**3. Start using a configuration file**
 
 ```bash
-am -s example/counter.py -i python3
+am start --conf example/counter_config.json
 ```
 
-#### Start executable files directly
-
-If you’re running the executable in the current directory, use:
+**4. Start all applications**
 
 ```bash
-./am -s example/counter.py -i python3
+am start all
 ```
 
-Alternatively, you can use symbolic links for starting executables:
+**Start options:**
 
-```bash
-am -s example/counter.py
-```
+- `--start` or `-s`: Specify the target path
+- `--interpreter` or `-i`: Specify the interpreter path
+- `--working-directory` or `-d`: Specify the working directory
+- `--params` or `-p`: Specify command parameters
+- `--name` or `-n`: Specify application name
+- `--restart-control/--no-restart-control`: Control whether to restart the program
 
 ---
 
 ### Stop an Application
 
-Terminate a running application by using its ID:
+Stop a running application by ID:
 
 ```bash
 am stop 0
 ```
 
+Stop all applications:
+
+```bash
+am stop all
+```
+
 ---
 
-## ⚙️ Advanced Parameters
+### Restart an Application
 
-### Generate Configuration
-
-You can save the configuration for reuse with the `-g` option:
+Restart a specific application by ID:
 
 ```bash
-am -s example/counter.py -i python3 -g example/counter_config.json
+am restart 0
 ```
 
-### Load Configuration
-
-To reuse a previously saved configuration file, use:
+Restart all applications:
 
 ```bash
-am -c example/counter_config.json
+am restart all
 ```
 
-### Restart Keywords
+---
 
-Define specific keywords that trigger automatic restarts if they appear in the application output:
+### Delete an Application
+
+Remove an application from the management list:
 
 ```bash
-am -s example/counter.py -i python3 --restart_keyword "Exception XXX" "Exception YYY" -g example/counter_config.json
+am delete 0
 ```
 
-### Set Working Directory
-
-Specify the working directory for the application:
+Delete all applications (will prompt for confirmation):
 
 ```bash
-am -s counter.py -i python3 --restart_keyword "Exception XXX" "Exception YYY" -d "/home/nate/gitRepo/am3/example/" -g example/counter_config.json
+am delete all
 ```
 
-### Set Restart Delay
+---
 
-Define a delay (in seconds) before restarting the application:
+### View Logs
+
+View AM3's own logs:
 
 ```bash
-am -s counter.py -i python3 --restart_keyword "Exception XXX" "Exception YYY" -d "/home/nate/gitRepo/am3/example/" -t 3 -g example/counter_config.json
+am log
 ```
 
-### Use Regular Expressions for Restart Keywords
-
-Specify regular expressions as restart keywords for more flexible matching:
+View logs for a specific application:
 
 ```bash
-am -s counter.py -i python3  --restart_keyword "Exception XXX" --restart_keyword "Exception YYY" \
-  --restart_keyword_regex "| 0.00 |" --restart_keyword_regex "2\\d\\.\\d\\d KB/s" \
-  -d "/home/nate/gitRepo/am3/example/" -t 3 -g example/counter_config.json
+am log 0
 ```
 
-### Restart Check Delay
-
-Set a delay for how often to check if the application should restart:
+Continuously view logs (similar to `tail -f`):
 
 ```bash
-am -s counter.py -i python3 --restart_check_delay 0 --restart_keyword "Exception XXX" \
-  --restart_keyword "Exception YYY" --restart_keyword_regex "| 0.00 |" \
-  --restart_keyword_regex "2\\d\\.\\d\\d KB/s" \
-  -d "/home/nate/gitRepo/am3/example/" -t 3 -g example/counter_config.json
+am log 0 --follow
 ```
 
-### Pre-Execution Environment Check
-
-Run a pre-check script to validate the environment before executing the main application. The script's `check` function
-is automatically called every second until it returns `True`.
+Specify the number of lines to display:
 
 ```bash
-am -s counter.py -i python3 --restart_check_delay 0 --restart_keyword "Exception XXX" \
-  --restart_keyword "Exception YYY" --restart_keyword_regex "| 0.00 |" \
-  --restart_keyword_regex "2\\d\\.\\d\\d KB/s" -d "/home/nate/gitRepo/am3/example/" \
-  -t 3 -b "example/counter_before_execute.py" -g example/counter_config.json
+am log 0 --lines 100
 ```
 
-### Assign Application Name
+---
 
-You can specify a custom name for the application:
+### Save and Load Application List
+
+Save the current application list configuration:
 
 ```bash
-am -s counter.py -i python3 --restart_check_delay 0 --restart_keyword "Exception XXX" \
-  --restart_keyword "Exception YYY" --restart_keyword_regex "| 0.00 |" \
-  --restart_keyword_regex "2\\d\\.\\d\\d KB/s" -d "/home/nate/gitRepo/am3/example/" \
-  -t 3 -b "example/counter_before_execute.py" --name counter -g example/counter_config.json
+am save
 ```
 
---- 
+Load application list from saved configuration:
 
-# 🙏 Thanks
+```bash
+am load
+```
+
+---
+
+## ⚙️ Advanced Features
+
+### Configuration Files
+
+You can save application configurations to a file for reuse:
+
+```bash
+am start --start example/counter.py --interpreter python3 --generate example/counter_config.json
+```
+
+Then start the application using the configuration file:
+
+```bash
+am start --conf example/counter_config.json
+```
+
+### Auto Restart
+
+AM3 supports automatic restart based on keywords or regular expressions:
+
+```bash
+am start --start example/counter.py --restart-keyword "Exception" --restart-keyword-regex "Error.*"
+```
+
+Set restart wait time:
+
+```bash
+am start --start example/counter.py --restart-wait-time 3
+```
+
+### API Service
+
+Initialize the API service:
+
+```bash
+am api init
+```
+
+Start the API service:
+
+```bash
+am api start
+```
+
+Stop the API service:
+
+```bash
+am api stop
+```
+
+### Startup on Boot
+
+Set AM3 to start on system boot:
+
+```bash
+am startup
+```
+
+---
+
+## 🔄 Command Reference
+
+### Global Commands
+
+- `am --version`: Display version information
+- `am --help`: Display help information
+
+### Application Management Commands
+
+- `am list`: List applications
+- `am start`: Start an application
+- `am stop`: Stop an application
+- `am restart`: Restart an application
+- `am delete`: Delete an application
+- `am log`: View logs
+- `am save`: Save application list
+- `am load`: Load application list
+- `am startup`: Set startup on boot
+
+### API Service Commands
+
+- `am api init`: Initialize API service
+- `am api start`: Start API service
+- `am api stop`: Stop API service
+
+---
+
+# 🙏 Acknowledgements
 
 Thanks for the great IDE Pycharm from Jetbrains.
 

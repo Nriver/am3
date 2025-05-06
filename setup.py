@@ -8,9 +8,24 @@ https://github.com/pypa/sampleproject
 import pathlib
 import site
 import sys
+import os
 
 # Always prefer setuptools over distutils
 from setuptools import setup, find_packages
+
+# 获取版本号
+def get_version():
+    """从version.py文件中获取版本号"""
+    version_file = os.path.join(
+        os.path.dirname(__file__),
+        'src', 'am3', 'version.py'
+    )
+    with open(version_file, 'r', encoding='utf-8') as f:
+        version_line = [line for line in f.readlines() if line.startswith('__version__')]
+        if not version_line:
+            raise RuntimeError('无法找到版本信息')
+        version = version_line[0].split('=')[1].strip().strip("'").strip('"')
+        return version
 
 # patch for package install in user directory
 site.ENABLE_USER_SITE = "--user" in sys.argv[1:]
@@ -43,7 +58,7 @@ setup(
     # For a discussion on single-sourcing the version across setup.py and the
     # project code, see
     # https://packaging.python.org/guides/single-sourcing-package-version/
-    version='1.0.3',  # Required
+    version=get_version(),  # Required
 
     # This is a one-line description or tagline of what your project does. This
     # corresponds to the "Summary" metadata field:
@@ -110,6 +125,8 @@ setup(
         'Programming Language :: Python :: 3.9',
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
+        "Programming Language :: Python :: 3.13",
         'Programming Language :: Python :: 3 :: Only',
     ],
 
@@ -150,14 +167,14 @@ setup(
     # For an analysis of "install_requires" vs pip's requirements files see:
     # https://packaging.python.org/discussions/install-requires-vs-requirements/
     install_requires=[
-        'loguru',
-        'flask',
-        'psutil',
-        'PrettyTable',
-        'python-socketio==5.11.2',
-        'websockets==12.0',
-        'watchdog',
-        'click',
+        'loguru>=0.5.0',
+        'flask>=2.0.0',
+        'psutil>=5.7.0',
+        'PrettyTable>=2.0.0',
+        'python-socketio>=5.11.2',
+        'websockets>=12.0',
+        'watchdog>=2.0.0',
+        'click>=7.0',
     ],  # Optional
 
     # List additional groups of dependencies here (e.g. development

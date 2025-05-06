@@ -1,117 +1,37 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+"""
+AM3 - 应用管理工具
+主入口文件
+"""
 import os
 import re
-import subprocess
 import sys
+from loguru import logger
 
-from am3 import cmdline
-from am3.alias import get_aliases
-from am3.settings import am3_log_path
+from am3.cli.commands import cli
+from am3.cli.alias_commands import process_args
+from am3.config.manager import ConfigManager
 
 
 def main():
+    """主函数入口"""
+    # 清理命令行参数
     sys.argv[0] = re.sub(r'(-script\.pyw|\.exe)?$', '', sys.argv[0])
-    print(sys.argv)
-    # print(sys.executable)
-    # exit()
-    # 这里要解析一下参数
 
-    # 获取模块对应文件路径
-    cmdline_file = os.path.abspath(cmdline.__file__)
+    # 处理别名
+    new_args = process_args()
+    if new_args:
+        sys.argv[1:] = new_args
 
-    if len(sys.argv) == 1:
-        print('empty')
-        os.system(sys.executable + ' ' + cmdline_file)
-        exit()
+    # 初始化配置
+    config_manager = ConfigManager()
 
-    if len(sys.argv) == 2 and sys.argv[1] in get_aliases('help'):
-        os.system(sys.executable + ' ' + cmdline_file + ' -h')
-        exit()
+    # 设置日志
+    logger.add(config_manager.am3_log_path, rotation="10 MB")
 
-    action = sys.argv[1]
-    if action in get_aliases('list'):
-        print('应用列表')
-        cmdline.list_apps()
-        exit()
-    elif action in get_aliases('log'):
-        print('输出日志')
-        am3_status = cmdline.read_am3_status()
-        apps = am3_status['apps']
-        if len(sys.argv) == 2:
-            print('没有传入 app_id 输出am3的日志')
-            print(am3_log_path)
-            if not os.path.exists(am3_log_path):
-                os.system(f'touch {am3_log_path}')
-            os.system(f'tail -f {am3_log_path}')
-        else:
-            app_id = sys.argv[2]
-            if app_id in apps:
-                log_output_path = apps[app_id]['app_conf']['app_log_path']
-                print(log_output_path)
-                if not os.path.exists(log_output_path):
-                    os.system(f'touch {log_output_path}')
-                os.system(f'tail -f {log_output_path}')
-            else:
-                print('app id 不存在')
-        exit()
-    elif action in get_aliases('startup'):
-        print('自启动')
-        cmdline.startup(am3_executable_path=os.path.abspath(__file__))
-        exit()
-
-    elif action in get_aliases('load'):
-        app_list = cmdline.load_apps()
-        for app in app_list:
-            app_id = app['app_id']
-            if app['app_is_running']:
-                cmd = [sys.executable, cmdline_file, 'start', app_id]
-                print(cmd)
-                subprocess.Popen(cmd,
-                                 stdout=subprocess.DEVNULL,
-                                 stderr=subprocess.STDOUT
-                                 )
-        exit()
-
-    elif action in get_aliases('api'):
-        print('api')
-        cmdline.handle_api()
-        exit()
-
-    if sys.argv[1] in (get_aliases('start') + get_aliases('stop') + get_aliases('restart') + get_aliases('delete')):
-        if sys.argv[2] == 'all':
-            # 特殊情况 传入的参数是 all 则遍历所有的 app_id
-            app_ids = cmdline.get_all_app_ids()
-            for app_id in app_ids:
-                cmd = [sys.executable, cmdline_file, sys.argv[1], app_id]
-                print(cmd)
-                subprocess.Popen(cmd,
-                                 stdout=subprocess.DEVNULL,
-                                 stderr=subprocess.STDOUT
-                                 )
-            exit()
-
-    # 正常的 --start 等参数
-    # 特殊命令
-    # start 命令
-    # restart 命令
-    # delete 命令
-    # 都通过子进程方式运行
-    print('运行命令')
-    # switch = 10
-    switch = 20
-    if switch == 10:
-        # sys.exit(cmdline.execute())
-        sys.exit(cmdline.main())
-    elif switch == 20:
-        # print(cmdline_file)
-        cmd = [sys.executable, cmdline_file, *sys.argv[1:]]
-        # print(cmd)
-        subprocess.Popen(cmd,
-                         stdout=subprocess.DEVNULL,
-                         stderr=subprocess.STDOUT
-                         )
-        exit()
+    # 执行命令行接口
+    cli(obj={})
 
 
 if __name__ == '__main__':
